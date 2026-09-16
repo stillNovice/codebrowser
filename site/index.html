@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>codebrowse — browser-based code review with a built-in agent</title>
+  <meta name="description" content="A localhost code browser with an embedded coding agent. Review diffs, comment on lines, steer the agent — all in the browser.">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <style>
+    :root {
+      --bg: #0d1117; --bg2: #161b22; --border: #30363d; --fg: #e6edf3;
+      --dim: #8b949e; --accent: #7ee787; --accent2: #79c0ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg); color: var(--fg);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+
+    nav {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 0; border-bottom: 1px solid var(--border);
+    }
+    .logo-img { height: 28px; display: block; }
+    .logo { font-weight: 700; font-size: 18px; }
+    .logo .mark { color: var(--accent); }
+    nav .spacer { flex: 1; }
+    nav a.item { color: var(--dim); font-size: 14px; }
+    nav a.cta {
+      background: var(--accent); color: #0d1117; font-weight: 600;
+      padding: 6px 14px; border-radius: 6px; font-size: 14px;
+    }
+    nav a.cta:hover { text-decoration: none; opacity: .9; }
+
+    header { padding: 72px 0 48px; }
+    h1 { font-size: clamp(32px, 6vw, 52px); line-height: 1.15; letter-spacing: -0.02em; }
+    h1 .accent { color: var(--accent); }
+    .tagline {
+      margin-top: 18px; font-size: 19px; color: var(--dim); max-width: 640px;
+    }
+    .tagline strong { color: var(--fg); font-weight: 600; }
+
+    .demo {
+      margin: 36px 0; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: var(--bg2);
+    }
+    .demo img { display: block; width: 100%; }
+    .demo figcaption { padding: 10px 16px; font-size: 13px; color: var(--dim); border-top: 1px solid var(--border); }
+
+    .install {
+      display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; align-items: center;
+    }
+    .install code {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 16px; font-size: 14px; color: var(--accent);
+    }
+    .install .note { font-size: 13px; color: var(--dim); }
+
+    h2 {
+      font-size: 24px; margin: 56px 0 20px; letter-spacing: -0.01em;
+      padding-top: 8px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+    }
+    .card h3 { font-size: 15px; margin-bottom: 6px; }
+    .card h3 .ic { color: var(--accent); margin-right: 6px; }
+    .card p { font-size: 14px; color: var(--dim); }
+
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 12px; }
+    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+    th { color: var(--dim); font-weight: 500; font-size: 13px; }
+    td:not(:first-child), th:not(:first-child) { text-align: center; }
+    td.yes { color: var(--accent); } td.no { color: #f85149; } td.mid { color: var(--dim); }
+
+    pre.term {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px 18px; font-size: 13.5px; overflow-x: auto; margin-top: 12px;
+    }
+    pre.term .c { color: var(--dim); } pre.term .p { color: var(--accent); }
+
+    footer {
+      margin-top: 72px; padding: 24px 0 40px; border-top: 1px solid var(--border);
+      font-size: 13px; color: var(--dim); display: flex; gap: 16px; align-items: center;
+    }
+    footer .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="/"><img class="logo-img" src="assets/wordmark-dark.png" alt="codebrowse"></a>
+      <div class="spacer"></div>
+      <a class="item" href="https://github.com/stillNovice/codebrowse/blob/main/docs/architecture.md">architecture</a>
+      <a class="item" href="https://github.com/stillNovice/codebrowse/blob/main/docs/api.md">api</a>
+      <a class="cta" href="https://github.com/stillNovice/codebrowse">github</a>
+    </nav>
+
+    <header>
+      <img src="assets/icon.png" alt="" width="72" height="72" style="margin-bottom:20px;">
+      <h1>Review code in the browser.<br><span class="accent">With the agent built in.</span></h1>
+      <p class="tagline">
+        Agents write code in terminals. <strong>codebrowse</strong> is where you review it:
+        live diffs, line comments, symbol navigation — and the agent's own session
+        one click away. One Go binary, zero dependencies, localhost by default.
+      </p>
+      <div class="install">
+        <code>go build -o codebrowse .</code>
+        <code>./serve.sh -r ~/your-repo</code>
+        <span class="note">Go 1.22+ · no npm, no CGO, no config</span>
+      </div>
+    </header>
+
+    <figure class="demo">
+      <img src="assets/codebrowse-tweetable.gif" alt="codebrowse demo: reviewing a diff, commenting, chatting with the agent">
+      <figcaption>reviewing a working-tree diff · line comments · embedded agent chat</figcaption>
+    </figure>
+
+    <h2>Built for the AI-era loop</h2>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="ic">⚡</span>Same session as your terminal</h3>
+        <p>The chat panel attaches to your live pi session. The agent knows what it just did — you don't repeat context.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">💬</span>Comments where the code is</h3>
+        <p>Drag in the gutter, comment on a line or range, discuss with the agent in one click. Pre-PR, pre-commit.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">🚦</span>Live diffs, scroll-safe</h3>
+        <p>Agent edits appear while you look at them. GitHub-PR style stacked review, scrollspy, viewport preserved.</p>
+      </div>
+      <div class="card">
+        <h3><span class="ic">🔍</span>Navigate instantly</h3>
+        <p>AST outline, click-any-identifier call sites, parallel content search with regex. All offline, all instant.</p>
+      </div>
+    </div>
+
+    <h2>Why not an IDE or a PR page?</h2>
+    <table>
+      <tr><th></th><th>IDE (VS Code)</th><th>PR page</th><th>codebrowse</th></tr>
+      <tr><td>Built for</td><td class="mid">writing</td><td class="mid">gating merges</td><td class="yes">reviewing working code, live</td></tr>
+      <tr><td>Agent context</td><td class="no">separate chat tools</td><td class="no">none</td><td class="yes">the agent's own session</td></tr>
+      <tr><td>Line comments</td><td class="mid">via extensions</td><td class="mid">after PR exists</td><td class="yes">instant, pre-commit</td></tr>
+      <tr><td>Weight</td><td class="no">~1.4 GB, 15+ processes</td><td class="mid">post-hoc only</td><td class="yes">1 binary, ~20 MB, &lt;1 s open</td></tr>
+      <tr><td>Shows uncommitted work</td><td class="yes">yes</td><td class="no">no</td><td class="yes">that's the default view</td></tr>
+    </table>
+
+    <h2>Run it</h2>
+<pre class="term"><span class="c"># clone &amp; build</span>
+<span class="p">$</span> git clone https://github.com/stillNovice/codebrowse.git &amp;&amp; cd codebrowse
+<span class="p">$</span> make build
+
+<span class="c"># review any repo — chat resumes your terminal pi session</span>
+<span class="p">$</span> ./codebrowse -r ~/src/some-repo
+<span class="c">→ http://127.0.0.1:4004</span></pre>
+
+    <footer>
+      <img src="assets/wordmark-dark.png" alt="codebrowse" style="height:16px; opacity:.8;">
+      <span>MIT</span>
+      <div class="spacer"></div>
+      <a href="https://github.com/stillNovice/codebrowse">source</a>
+      <a href="https://github.com/stillNovice/codebrowse#readme">docs</a>
+    </footer>
+  </div>
+</body>
+</html>

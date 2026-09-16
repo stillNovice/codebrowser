@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codebrowse</title>
+<link rel="icon" type="image/png" href="logo/icon.png">
+<link rel="stylesheet" href="vendor/hl-theme.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="err-banner" class="hidden"></div>
+<header>
+  <img class="logo" src="logo/wordmark-dark.png" alt="codebrowse">
+  <span id="repo"></span>
+  <span class="spacer"></span>
+  <span id="model">agent:</span>
+  <select id="chat-model-select" title="Switch discussion agent" aria-label="Switch discussion agent"></select>
+  <button id="close-codebrowse" title="Stop this codebrowse server">× close</button>
+</header>
+<main>
+  <aside id="left">
+    <div id="mode-tabs">
+      <button id="tab-files" class="tab">Files</button>
+      <button id="tab-changes" class="tab active">Changes <span id="change-count"></span></button>
+    </div>
+    <div id="review-target" class="hidden">
+      <select id="review-sel" title="What to review"></select>
+    </div>
+    <div id="left-tools">
+      <input id="file-search" type="search" placeholder="filter files…  (/ to search content)" autocomplete="off">
+      <label class="wrap-toggle" title="Wrap long file names">
+        <input type="checkbox" id="wrap-names"> wrap
+      </label>
+    </div>
+    <div id="content-search-bar" class="hidden">
+      <span id="content-search-label">content search</span>
+      <button id="content-search-close" type="button" title="Close content search">×</button>
+    </div>
+    <div id="file-list"></div>
+  </aside>
+  <div id="left-resizer"></div>
+  <section id="center">
+    <div id="center-toolbar">
+      <span id="md-view-label" class="hidden">Markdown</span>
+      <div id="md-view-buttons" class="hidden">
+        <button id="md-code-view" type="button" title="Show code/diff view">&lt;/&gt;</button>
+        <button id="md-rich-view" type="button" title="Show rendered Markdown">▤</button>
+      </div>
+    </div>
+    <div id="editor-wrap" class="hidden">
+      <div id="editor-gutter"></div>
+      <pre id="editor" class="code hljs"></pre>
+    </div>
+    <article id="markdown-view" class="hidden"></article>
+    <div id="diff-view" class="hidden"></div>
+  </section>
+  <div id="right-resizer"></div>
+  <aside id="right">
+    <div id="panel-tabs">
+      <button class="panel-tab" data-panel="chat">agent <span id="chat-model"></span></button>
+      <button class="panel-tab" data-panel="comments">comments <span id="comment-count"></span></button>
+      <span class="spacer"></span>
+      <button id="collapse-right" title="Hide side panel" onclick="cbToggleRight()">▸</button>
+    </div>
+
+    <div id="chat" class="rpanel">
+      <div id="chat-log" aria-live="polite"></div>
+      <div id="chat-status" aria-live="polite"></div>
+      <div id="chat-composer">
+        <textarea id="chat-input" rows="1" placeholder="Ask the Agent" autocomplete="off"></textarea>
+        <button id="chat-send" title="Send">Send</button>
+        <button id="chat-stop" class="hidden" title="Stop the agent" aria-label="Stop the agent"><span class="stop-sq"></span> Stop</button>
+      </div>
+    </div>
+
+    <div id="comments" class="rpanel">
+      <div id="comments-list"></div>
+      <div id="comments-hint">Click any diff line to comment.<br>Comments land in <code>.codebrowse-review.jsonl</code> for the agent session.</div>
+      <div id="review-bar">
+        <button id="post-review-btn" title="Push all notes to agent, which posts them as one inline review on the PR">⇪ Post review to PR</button>
+      </div>
+      <div id="commit-bar">
+        <input id="commit-msg" placeholder="Commit message…" maxlength="200">
+        <div id="commit-split">
+          <button id="commit-btn" title="Stage everything and commit">✓ commit</button><button id="commit-menu-btn" title="More commit options">▾</button>
+          <div id="commit-menu" class="hidden">
+            <div class="cm-item" data-mode="commit">✓ commit</div>
+            <div class="cm-item" data-mode="push">✓ commit &amp; push</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div id="right-collapsed" class="hidden">
+    <button id="expand-right" title="Open comments" onclick="cbToggleRight()">◂&nbsp;<span id="comment-count-collapsed"></span></button>
+  </div>
+</main>
+<script>
+  window.addEventListener("error", (e) => {
+    const b = document.getElementById("err-banner");
+    b.textContent = "UI error: " + e.message;
+    b.classList.remove("hidden");
+  });
+</script>
+<script>
+  function cbToggleRight() {
+    document.body.classList.toggle("right-closed");
+    localStorage.setItem("cb.right", document.body.classList.contains("right-closed") ? "closed" : "open");
+  }
+  if (localStorage.getItem("cb.right") === "closed") document.body.classList.add("right-closed");
+</script>
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/highlight.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
